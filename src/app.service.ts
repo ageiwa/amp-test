@@ -19,6 +19,11 @@ function getInterval() {
     return interval * 1000
 }
 
+function getCommission() {
+    const commission = new Decimal(process.env.COMMISSION || '0.01')
+    return commission
+}
+
 @Injectable()
 export class AppService implements OnModuleInit {
     private readonly url = 'https://api.binance.com'
@@ -28,6 +33,7 @@ export class AppService implements OnModuleInit {
 
     private askPrice = '0'
     private bidPrice = '0'
+    private commission = new Decimal('0')
     private askCom = new Decimal('0')
     private bidCom = new Decimal('0')
     private midPrice = new Decimal('0')
@@ -35,6 +41,8 @@ export class AppService implements OnModuleInit {
     constructor(private readonly httpService: HttpService) {}
 
     async onModuleInit() {
+        this.commission = getCommission()
+
         try {
             await this.getBitcoinPrice(true)
             this.isInit = true
@@ -71,15 +79,13 @@ export class AppService implements OnModuleInit {
 
     calcCommission() {
         if (this.needCalc) {
-            const precent = 0.01
-
             this.askCom = new Decimal(this.askPrice)
-                .mul(precent)
+                .mul(this.commission)
                 .div(100)
                 .plus(this.askPrice)
 
             this.bidCom = new Decimal(this.bidPrice)
-                .mul(precent)
+                .mul(this.commission)
                 .div(100)
                 .plus(this.bidPrice)
 
